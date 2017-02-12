@@ -23,7 +23,7 @@ namespace Mug
             _runningContainers = new Dictionary<string, ContainerInfo>();
         }
 
-        public event EventHandler<ContainerLifetimeEvent> ContainerStarted = delegate { };
+        public event EventHandler<ContainerLifetimeEvent> ContainerDetected = delegate { };
         public event EventHandler<ContainerLifetimeEvent> ContainerStopped = delegate { };
 
         public void Start()
@@ -38,7 +38,7 @@ namespace Mug
                 }
                 catch (Exception ex)
                 {
-                    _logger.WriteLine("Exception: {0}", ex.Message);
+                    _logger.WriteLine(LogLevel.Err, "Exception: {0}, StackTrace: {1}", ex.Message, ex.StackTrace);
                 }
             }
         }
@@ -59,7 +59,7 @@ namespace Mug
 
                 if (info.OSType != "windows")
                 {
-                    _logger.WriteLine("Docker host not running Windows?");
+                    _logger.WriteLine(LogLevel.Err, "Docker host not running Windows?");
 
                     return;
                 }
@@ -99,7 +99,7 @@ namespace Mug
                 {
                     if (!_runningContainers.ContainsKey(currentContainer.Key))
                     {
-                        ContainerStarted(this, new ContainerLifetimeEvent(currentContainer.Value));
+                        ContainerDetected(this, new ContainerLifetimeEvent(currentContainer.Value));
                     }
                 }
 
@@ -120,7 +120,7 @@ namespace Mug
                 // Handle timeouts
                 if (ex.CancellationToken != cancellationSource.Token)
                 {
-                    _logger.WriteLine("Timeout during communcation with docker host");
+                    _logger.WriteLine(LogLevel.Err, "Timeout during communcation with docker host");
 
                     return;
                 }
