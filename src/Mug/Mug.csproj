@@ -43,9 +43,11 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleLogger.cs" />
     <Compile Include="ContainerInfo.cs" />
     <Compile Include="ContainerLifetimeEvent.cs" />
     <Compile Include="DockerHostWatcher.cs" />
+    <Compile Include="ILogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

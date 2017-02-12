@@ -12,6 +12,7 @@ namespace Mug
         private static DockerHostWatcher _hostWatcher;
         private static readonly Dictionary<string, Process> _runningProxies = new Dictionary<string, Process>();
         private static string _dockerProxyExePath;
+        private static ILogger _logger;
 
         static Program()
         {
@@ -23,21 +24,23 @@ namespace Mug
 
         private static void Main()
         {
-            EnsureDockerProxyExe();
+            _logger = new ConsoleLogger();
 
-            _hostWatcher = new DockerHostWatcher(new HttpClient());
+            EnsureDockerProxyExe(_logger);
+
+            _hostWatcher = new DockerHostWatcher(_logger, new HttpClient());
             _hostWatcher.ContainerStopped += OnContainerStopped;
             _hostWatcher.ContainerStarted += OnContainerStarted;
             _hostWatcher.Start();
         }
 
-        private static void EnsureDockerProxyExe()
+        private static void EnsureDockerProxyExe(ILogger logger)
         {
             _dockerProxyExePath = Path.GetFullPath(".\\docker-proxy.exe");
 
             if (!File.Exists(_dockerProxyExePath))
             {
-                Console.WriteLine($"docker-proxy not found, downloading latest to {_dockerProxyExePath}");
+                logger.WriteLine($"docker-proxy not found, downloading latest to {_dockerProxyExePath}");
 
                 using (var client = new HttpClient())
                 {
@@ -53,7 +56,7 @@ namespace Mug
                 }
             }
 
-            Console.WriteLine($"Using docker-proxy {_dockerProxyExePath}");
+            logger.WriteLine($"Using docker-proxy {_dockerProxyExePath}");
         }
 
         private static void OnContainerStarted(object sender, ContainerLifetimeEvent @event)
@@ -71,7 +74,7 @@ namespace Mug
 
             _runningProxies.Add(@event.Container.Id, proxy);
 
-            Console.WriteLine("Started proxy for {0}", @event.Container.Id);
+            _logger.WriteLine("Started proxy for {0}", @event.Container.Id);
         }
 
         private static void OnContainerStopped(object sender, ContainerLifetimeEvent @event)
@@ -92,12 +95,12 @@ namespace Mug
 
             proxy.Dispose();
 
-            Console.WriteLine("Proxy for {0} has been shut down", id);
+            _logger.WriteLine("Proxy for {0} has been shut down", id);
         }
 
         private static bool OnTerminate(int sig)
         {
-            Console.WriteLine("Stopping...");
+            _logger.WriteLine("Stopping...");
 
             _hostWatcher.Stop();
             _hostWatcher.ContainerStopped -= OnContainerStopped;
@@ -111,7 +114,7 @@ namespace Mug
 
             _runningProxies.Clear();
 
-            Console.WriteLine("Stopped");
+            _logger.WriteLine("Stopped");
 
             Environment.Exit(-1);
 

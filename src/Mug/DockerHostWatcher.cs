@@ -10,11 +10,13 @@ namespace Mug
     public class DockerHostWatcher
     {
         private readonly HttpClient _httpClient;
+        private readonly ILogger _logger;
         private bool _running = true;
         private Dictionary<string, ContainerInfo> _runningContainers;
 
-        public DockerHostWatcher(HttpClient httpClient)
+        public DockerHostWatcher(ILogger logger, HttpClient httpClient)
         {
+            _logger = logger;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri("http://localhost:2375/v1.26");
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
@@ -36,7 +38,7 @@ namespace Mug
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Exception: {0}", ex.Message);
+                    _logger.WriteLine("Exception: {0}", ex.Message);
                 }
             }
         }
@@ -57,7 +59,9 @@ namespace Mug
 
                 if (info.OSType != "windows")
                 {
-                    throw new Exception("Docker host not running Windows?");
+                    _logger.WriteLine("Docker host not running Windows?");
+
+                    return;
                 }
 
                 // Check containers
@@ -116,7 +120,7 @@ namespace Mug
                 // Handle timeouts
                 if (ex.CancellationToken != cancellationSource.Token)
                 {
-                    Console.WriteLine("Timeout during communcation with docker host");
+                    _logger.WriteLine("Timeout during communcation with docker host");
 
                     return;
                 }
