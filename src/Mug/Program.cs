@@ -20,8 +20,11 @@ namespace Mug
 
         private static void Main()
         {
+            // Handler needs to be stored in static field to avoid it beeing garbage collected
+            _terminateHandler += OnTerminate;
+
             // Add handler for termination events
-            SetConsoleCtrlHandler(OnTerminate, true);
+            SetConsoleCtrlHandler(_terminateHandler, true);
 
             // Load embedded assemblies
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
@@ -146,6 +149,7 @@ namespace Mug
             return true;
         }
 
-        private delegate bool ConsoleEventDelegate(int sig);
+        private static ConsoleEventDelegate _terminateHandler;
+        private  delegate bool ConsoleEventDelegate(int sig);
     }
 }

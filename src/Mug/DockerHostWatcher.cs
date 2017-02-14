@@ -38,7 +38,7 @@ namespace Mug
                 }
                 catch (Exception ex)
                 {
-                    _logger.WriteLine(LogLevel.Err, "Exception: {0}, StackTrace: {1}", ex.Message, ex.StackTrace);
+                    _logger.WriteLine(LogLevel.Err, "Exception: {0}\n{1}", ex.Message, ex.StackTrace);
                 }
             }
         }
@@ -57,7 +57,7 @@ namespace Mug
 
                 var info = JsonConvert.DeserializeObject<dynamic>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
-                if (info.OSType != "windows")
+                if (info.OSType.Value != "windows")
                 {
                     _logger.WriteLine(LogLevel.Err, "Docker host not running Windows?");
 
@@ -86,7 +86,7 @@ namespace Mug
                         }
 
                         string ip = container.NetworkSettings.Networks.nat.IPAddress.Value;
-                        string id = container.Id;
+                        string id = container.Id.Value;
                         long publicPort = port.PublicPort.Value;
                         long privatePort = port.PrivatePort.Value;
 
@@ -94,7 +94,7 @@ namespace Mug
                     }
                 }
 
-                // Raise started events
+                // Raise detected events
                 foreach (var currentContainer in currentContainers)
                 {
                     if (!_runningContainers.ContainsKey(currentContainer.Key))
